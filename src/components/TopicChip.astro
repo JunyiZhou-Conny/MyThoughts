@@ -1,0 +1,20 @@
+---
+interface Props {
+  topic: string;
+  href?: string;
+  quiet?: boolean;
+}
+
+const { topic, href, quiet = false } = Astro.props;
+const className = quiet ? "chip chip--quiet" : "chip";
+---
+
+{
+  href ? (
+    <a class={className} href={href}>
+      {topic}
+    </a>
+  ) : (
+    <span class={className}>{topic}</span>
+  )
+}

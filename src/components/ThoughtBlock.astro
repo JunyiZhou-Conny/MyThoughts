@@ -1,0 +1,26 @@
+---
+import { formatDate, type Thought } from "../lib/thoughts";
+import TopicChip from "./TopicChip.astro";
+
+interface Props {
+  thought: Thought;
+  featured?: boolean;
+}
+
+const { thought, featured = false } = Astro.props;
+const href = `/thoughts/${thought.id}`;
+---
+
+<a class:list={["block", { "block--featured": featured }]} href={href}>
+  <div class="block__meta">
+    <span class="block__chips">
+      <TopicChip topic={thought.data.topic} />
+      {thought.data.sample && <TopicChip topic="Sample" quiet />}
+    </span>
+    <time class="date" datetime={thought.data.date.toISOString()}>
+      {formatDate(thought.data.date)}
+    </time>
+  </div>
+  <h3 class="block__title">{thought.data.title}</h3>
+  <p class="block__lede">{thought.data.lede}</p>
+</a>
