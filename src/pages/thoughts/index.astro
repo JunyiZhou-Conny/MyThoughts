@@ -1,0 +1,73 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import TopicChip from "../../components/TopicChip.astro";
+import { formatDate, getPublishedThoughts, topicsFrom } from "../../lib/thoughts";
+
+const thoughts = await getPublishedThoughts();
+const topics = topicsFrom(thoughts);
+---
+
+<BaseLayout
+  title="Thoughts"
+  description="An index of published thoughts, arranged like a research log."
+  current="thoughts"
+>
+  <div class="page-intro">
+    <h1>Index</h1>
+    <p>
+      Every finished piece, newest first. Filter by topic the way a lab would
+      filter a research log.
+    </p>
+  </div>
+
+  <div class="filter-bar" data-filters>
+    <button type="button" data-topic="all" aria-pressed="true">All</button>
+    {topics.map((topic) => (
+      <button type="button" data-topic={topic} aria-pressed="false">
+        {topic}
+      </button>
+    ))}
+  </div>
+
+  <div class="index-list" data-index>
+    {
+      thoughts.map((thought) => (
+        <a
+          class="index-row"
+          href={`/thoughts/${thought.id}`}
+          data-topic={thought.data.topic}
+        >
+          <time class="date" datetime={thought.data.date.toISOString()}>
+            {formatDate(thought.data.date)}
+          </time>
+          <TopicChip topic={thought.data.topic} quiet />
+          <div>
+            <h2 class="index-row__title">{thought.data.title}</h2>
+            <p class="index-row__lede">{thought.data.lede}</p>
+          </div>
+        </a>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<script>
+  const bar = document.querySelector("[data-filters]");
+  const rows = document.querySelectorAll<HTMLElement>("[data-index] .index-row");
+
+  bar?.addEventListener("click", (event) => {
+    const button = (event.target as HTMLElement).closest("button[data-topic]");
+    if (!button) return;
+
+    const topic = button.getAttribute("data-topic") ?? "all";
+
+    bar.querySelectorAll("button").forEach((item) => {
+      item.setAttribute("aria-pressed", String(item === button));
+    });
+
+    rows.forEach((row) => {
+      const match = topic === "all" || row.dataset.topic === topic;
+      row.hidden = !match;
+    });
+  });
+</script>

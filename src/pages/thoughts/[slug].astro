@@ -1,0 +1,58 @@
+---
+import { render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ThoughtBlock from "../../components/ThoughtBlock.astro";
+import TopicChip from "../../components/TopicChip.astro";
+import {
+  formatDate,
+  getPublishedThoughts,
+  readingMinutes,
+} from "../../lib/thoughts";
+
+export async function getStaticPaths() {
+  const thoughts = await getPublishedThoughts();
+  return thoughts.map((thought) => ({
+    params: { slug: thought.id },
+    props: { thought, thoughts },
+  }));
+}
+
+const { thought, thoughts } = Astro.props;
+const { Content } = await render(thought);
+const minutes = readingMinutes(thought.body ?? "");
+const related = thoughts.filter((entry) => entry.id !== thought.id).slice(0, 3);
+---
+
+<BaseLayout title={thought.data.title} description={thought.data.lede} current="thoughts">
+  <article class="essay">
+    <aside class="essay-rail">
+      <time datetime={thought.data.date.toISOString()}>{formatDate(thought.data.date)}</time>
+      <TopicChip topic={thought.data.topic} href="/thoughts" />
+      {thought.data.sample && <span>Sample</span>}
+      <span>{minutes} min read</span>
+    </aside>
+    <div>
+      <h1 class="essay-title">{thought.data.title}</h1>
+      <p class="essay-lede">{thought.data.lede}</p>
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </article>
+
+  {
+    related.length > 0 && (
+      <section class="keep-reading" aria-labelledby="keep-reading">
+        <div class="section-head">
+          <h2 id="keep-reading">Keep reading</h2>
+          <a href="/thoughts">Index</a>
+        </div>
+        <div class="col-3">
+          {related.map((entry) => (
+            <ThoughtBlock thought={entry} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>

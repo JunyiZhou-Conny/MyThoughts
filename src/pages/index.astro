@@ -1,0 +1,64 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ThoughtBlock from "../components/ThoughtBlock.astro";
+import { getPublishedThoughts, groupByTopic } from "../lib/thoughts";
+
+const thoughts = await getPublishedThoughts();
+const featured = thoughts.find((thought) => thought.data.featured) ?? thoughts[0];
+const supporting = thoughts.filter((thought) => thought.id !== featured?.id);
+const latest = supporting[0];
+const remainder = supporting.slice(1);
+const groups = groupByTopic(remainder.length ? remainder : thoughts);
+---
+
+<BaseLayout
+  title="My Thoughts"
+  description="A public studio for thoughts written by hand."
+  current="home"
+>
+  <section class="hero">
+    <p class="hero__kicker">A writing studio, made public</p>
+    <h1 class="hero__title">Thoughts kept from the stream of time.</h1>
+    <p class="hero__lede">
+      Dictation is how they arrive. Writing is how they become sentences I can stand
+      beside. This is that second act.
+    </p>
+  </section>
+
+  {
+    featured && (
+      <section aria-labelledby="latest-heading">
+        <div class="section-head">
+          <h2 id="latest-heading">Latest</h2>
+          <a href="/thoughts">Full index</a>
+        </div>
+        <div class="columns">
+          <div class="span-8">
+            <ThoughtBlock thought={featured} featured />
+          </div>
+          {latest && (
+            <div class="span-4">
+              <ThoughtBlock thought={latest} />
+            </div>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    remainder.length > 0 &&
+      groups.map(([topic, entries]) => (
+        <section class="topic-group" aria-labelledby={`topic-${topic}`}>
+          <h2 class="topic-group__title" id={`topic-${topic}`}>
+            {topic}
+          </h2>
+          <div class="col-3">
+            {entries.map((thought) => (
+              <ThoughtBlock thought={thought} />
+            ))}
+          </div>
+        </section>
+      ))
+  }
+</BaseLayout>

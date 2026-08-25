@@ -1,0 +1,55 @@
+---
+import { render } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { formatDate, getInboxNotes } from "../lib/thoughts";
+
+if (import.meta.env.PROD) {
+  return new Response(null, { status: 404, statusText: "Not Found" });
+}
+
+const notes = await getInboxNotes();
+const rendered = await Promise.all(
+  notes.map(async (note) => ({
+    note,
+    Content: (await render(note)).Content,
+  })),
+);
+---
+
+<BaseLayout
+  title="Inbox"
+  description="Raw dictation, visible only on localhost."
+  current="inbox"
+>
+  <div class="page-intro">
+    <h1>Inbox</h1>
+    <p>
+      Local only. Paste transcripts from a voice note or a Sandbar Stream Ring
+      here, then rewrite them by hand into <code>content/thoughts</code>.
+    </p>
+  </div>
+
+  <p class="notice">
+    These notes are not built into the public site. They exist so localhost can
+    feel like a studio.
+  </p>
+
+  {
+    rendered.length === 0 ? (
+      <p class="empty">The inbox is empty. Add a markdown file to content/inbox.</p>
+    ) : (
+      rendered.map(({ note, Content }) => (
+        <article class="inbox-note">
+          <p class="inbox-source">
+            {note.data.source} ·{" "}
+            <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
+          </p>
+          <h2>{note.data.title}</h2>
+          <div class="prose">
+            <Content />
+          </div>
+        </article>
+      ))
+    )
+  }
+</BaseLayout>
