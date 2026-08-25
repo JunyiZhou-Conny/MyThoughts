@@ -385,6 +385,10 @@ a:hover {
   text-decoration: none;
 }
 
+.index-row[hidden] {
+  display: none;
+}
+
 .index-row:last-child {
   border-bottom: 1px solid var(--rule);
 }
